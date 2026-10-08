@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>신나는 AMS</title>
+  <style>
+    :root {
+      --bg1: #f4f7ff;
+      --bg2: #eef9f4;
+      --primary: #4f46e5;
+      --secondary: #10b981;
+      --accent: #f59e0b;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --card: #ffffff;
+      --correct: #22c55e;
+      --wrong: #ef4444;
+      --shadow: 0 12px 30px rgba(79, 70, 229, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, var(--bg1), var(--bg2));
+      color: var(--text);
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 24px;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #4f46e5, #10b981);
+      color: white;
+      border-radius: 24px;
+      padding: 36px 28px;
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: clamp(2rem, 4vw, 3rem);
+      letter-spacing: 1px;
+    }
+
+    .header p {
+      margin-top: 10px;
+      font-size: 1.1rem;
+      opacity: 0.95;
+    }
+
+    .quiz-box {
+      background: var(--card);
+      border-radius: 20px;
+      padding: 28px;
+      margin-top: 28px;
+      box-shadow: var(--shadow);
+    }
+
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    .start-box {
+      text-align: center;
+      padding: 20px 10px;
+    }
+
+    .start-box h2 {
+      margin-bottom: 12px;
+      font-size: 2rem;
+    }
+
+    .start-box p {
+      color: var(--muted);
+      margin-bottom: 24px;
+      font-size: 1.05rem;
+    }
+
+    .btn {
+      border: 0;
+      border-radius: 12px;
+      padding: 14px 26px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+
+    .btn:hover { transform: translateY(-1px); }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), #7c3aed);
+      color: white;
+    }
+
+    .btn-secondary {
+      background: var(--secondary);
+      color: white;
+    }
+
+    .progress-wrap { margin-bottom: 20px; }
+
+    .progress {
+      width: 100%;
+      height: 14px;
+      background: #e5e7eb;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      border-radius: 999px;
+      transition: width 0.25s ease;
+    }
+
+    .status {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .question-card { margin-top: 10px; }
+
+    .question-card h3 {
+      margin: 0 0 18px;
+      font-size: 1.4rem;
+      line-height: 1.5;
+    }
+
+    .options { display: grid; gap: 12px; }
+
+    .option {
+      width: 100%;
+      text-align: left;
+      background: #f8fafc;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      color: var(--text);
+    }
+
+    .option:hover {
+      border-color: var(--primary);
+      background: #eef2ff;
+    }
+
+    .option.selected {
+      border-color: var(--primary);
+      background: #eef2ff;
+    }
+
+    .nav-buttons {
+      margin-top: 24px;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .result-box {
+      text-align: center;
+      padding: 12px 8px 0;
+    }
+
+    .score-circle {
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      margin: 8px auto 18px;
+      background: conic-gradient(var(--secondary) 0deg, var(--secondary) 320deg, #e5e7eb 320deg);
+      display: grid;
+      place-items: center;
+      position: relative;
+      box-shadow: inset 0 0 0 12px rgba(255,255,255,0.7);
+    }
+
+    .score-circle::before {
+      content: "";
+      position: absolute;
+      inset: 18px;
+      border-radius: 50%;
+      background: white;
+    }
+
+    .score-inner {
+      position: relative;
+      z-index: 1;
+      font-size: 2.2rem;
+      font-weight: bold;
+      color: var(--text);
+    }
+
+    .result-box h2 {
+      margin-top: 8px;
+      font-size: 2rem;
+    }
+
+    .result-box p {
+      color: var(--muted);
+      font-size: 1.05rem;
+    }
+
+    @media (max-width: 600px) {
+      .container { padding: 16px; }
+      .quiz-box { padding: 18px 16px; }
+      .nav-buttons { flex-direction: column; }
+      .btn { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>신나는 AMS</h1>
+      <p>Python Chapter 1–3 Quiz</p>
+    </div>
+
+    <div class="quiz-box">
+      <div id="startScreen" class="screen active start-box">
+        <h2>Welcome to 신나는 AMS</h2>
+        <p>
+          This quiz tests your understanding of Python Chapters 1 to 3.<br />
+          There are 30 multiple-choice questions. Good luck!
+        </p>
+        <button class="btn btn-primary" id="startBtn">Start Quiz</button>
+      </div>
+
+      <div id="quizScreen" class="screen">
+        <div class="progress-wrap">
+          <div class="progress">
+            <div id="progressBar" class="progress-bar"></div>
+          </div>
+          <div class="status">
+            <span id="progressText">Question 1 of 30</span>
+            <span id="scoreText">Score: 0</span>
+          </div>
+        </div>
+
+        <div class="question-card">
+          <h3 id="questionText"></h3>
+          <div id="options" class="options"></div>
+        </div>
+
+        <div class="nav-buttons">
+          <button class="btn btn-secondary" id="prevBtn">Previous</button>
+          <button class="btn btn-primary" id="nextBtn">Next</button>
+        </div>
+      </div>
+
+      <div id="resultScreen" class="screen result-box">
+        <h2>Quiz Finished!</h2>
+        <div class="score-circle">
+          <div class="score-inner" id="finalScore">0%</div>
+        </div>
+        <p id="resultMessage"></p>
+        <button class="btn btn-primary" id="restartBtn">Try Again</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const questions = [
+      {
+        question: "Which of the following is a valid Python variable name?",
+        options: ["2name", "my_name", "my-name", "class"],
+        answer: 1
+      },
+      {
+        question: "What is the output of print(3 + 5)?",
+        options: ["8", "35", "3 + 5", "Error"],
+        answer: 0
+      },
+      {
+        question: "Which data type is used for text in Python?",
+        options: ["int", "float", "str", "bool"],
+        answer: 2
+      },
+      {
+        question: "What does the input() function do?",
+        options: ["Prints output", "Reads user input", "Creates a file", "Deletes a variable"],
+        answer: 1
+      },
+      {
+        question: "Which symbol is used for comments in Python?",
+        options: ["//", "#", "/*", "--"],
+        answer: 1
+      },
+      {
+        question: "What is the result of 10 % 3?",
+        options: ["1", "3", "0", "7"],
+        answer: 0
+      },
+      {
+        question: "Which of the following is an integer?",
+        options: ["3.14", "'hello'", "10", "True"],
+        answer: 2
+      },
+      {
+        question: "What is the value of 7 > 5?",
+        options: ["True", "False", "7", "5"],
+        answer: 0
+      },
+      {
+        question: "Which statement is correct for comparison in Python?",
+        options: ["a = b", "a == b", "a => b", "a != b == c"],
+        answer: 1
+      },
+      {
+        question: "What will print if x = 5 and y = 2? print(x * y)",
+        options: ["52", "7", "10", "Error"],
+        answer: 2
+      },
+      {
+        question: "Which keyword is used to define a function in Python?",
+        options: ["func", "def", "function", "lambda"],
+        answer: 1
+      },
+      {
+        question: "What does len('Python') return?",
+        options: ["5", "6", "7", "8"],
+        answer: 2
+      },
+      {
+        question: "Which of these is a list?",
+        options: ["(1, 2, 3)", "{1: 'a'}", "[1, 2, 3]", "'123'"],
+        answer: 2
+      },
+      {
+        question: "How do you access the first item in a list named nums?",
+        options: ["nums[1]", "nums[0]", "nums.first()", "nums{0}"],
+        answer: 1
+      },
+      {
+        question: "Which of the following is a dictionary?",
+        options: ["[1, 2, 3]", "{'name': 'Abe'}", "(1, 2)", "\"abc\""],
+        answer: 1
+      },
+      {
+        question: "Which loop repeats while a condition is true?",
+        options: ["for loop", "while loop", "if loop", "repeat loop"],
+        answer: 1
+      },
+      {
+        question: "What is the correct syntax for an if statement?",
+        options: ["if x > 0 {}", "if (x > 0)", "if x > 0:", "if: x > 0"],
+        answer: 2
+      },
+      {
+        question: "What does the else block do?",
+        options: ["Executes when the if condition is true", "Always runs", "Executes when the if condition is false", "Ends the program"],
+        answer: 2
+      },
+      {
+        question: "What is the output of print('A' + 'B')?",
+        options: ["AB", "A B", "Error", "None"],
+        answer: 0
+      },
+      {
+        question: "Which operator checks whether two values are equal?",
+        options: ["=", "==", "===", "!="],
+        answer: 1
+      },
+      {
+        question: "Which of these is a boolean value?",
+        options: ["'yes'", "0", "True", "3.5"],
+        answer: 2
+      },
+      {
+        question: "What is the result of 2 ** 3?",
+        options: ["5", "6", "8", "9"],
+        answer: 2
+      },
+      {
+        question: "Which statement will print the value of a variable x?",
+        options: ["print x", "print(x)", "echo x", "output x"],
+        answer: 1
+      },
+      {
+        question: "What does a for loop usually iterate over?",
+        options: ["A condition", "A list or range", "A number only", "A file path"],
+        answer: 1
+      },
+      {
+        question: "Which of the following is correct for a range of 0 to 4?",
+        options: ["range(4)", "range(0, 4)", "range(1, 5)", "range(5)"],
+        answer: 1
+      },
+      {
+        question: "What is the output of print(type(5))?",
+        options: ["<class 'float'>", "<class 'str'>", "<class 'int'>", "<class 'bool'>"],
+        answer: 2
+      },
+      {
+        question: "Which of these is used to store multiple values in one variable?",
+        options: ["Variable", "Function", "List", "Integer"],
+        answer: 2
+      },
+      {
+        question: "What does 'hello'.upper() return?",
+        options: ["hello", "HELLO", "Hello", "hELLO"],
+        answer: 1
+      },
+      {
+        question: "Which statement is used to create a loop from 1 to 5?",
+        options: ["for i in range(1, 6):", "for i in range(1, 5):", "while i < 5:", "loop i=1 to 5"],
+        answer: 0
+      },
+      {
+        question: "What will print from: print(10 // 3)?",
+        options: ["3", "3.33", "4", "1"],
+        answer: 0
+      }
+    ];
+
+    const startScreen = document.getElementById("startScreen");
+    const quizScreen = document.getElementById("quizScreen");
+    const resultScreen = document.getElementById("resultScreen");
+
+    const startBtn = document.getElementById("startBtn");
+    const prevBtn = document.getElementById("prevBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const restartBtn = document.getElementById("restartBtn");
+
+    const questionText = document.getElementById("questionText");
+    const optionsContainer = document.getElementById("options");
+    const progressBar = document.getElementById("progressBar");
+    const progressText = document.getElementById("progressText");
+    const scoreText = document.getElementById("scoreText");
+    const finalScore = document.getElementById("finalScore");
+    const resultMessage = document.getElementById("resultMessage");
+
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let userAnswers = Array(questions.length).fill(null);
+
+    function showScreen(screen) {
+      startScreen.classList.remove("active");
+      quizScreen.classList.remove("active");
+      resultScreen.classList.remove("active");
+      screen.classList.add("active");
+    }
+
+    function updateProgress() {
+      const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
+      progressBar.style.width = progress + "%";
+      progressText.textContent = `Question ${currentQuestionIndex + 1} of ${questions.length}`;
+      scoreText.textContent = `Score: ${score}`;
+    }
+
+    function renderQuestion() {
+      const q = questions[currentQuestionIndex];
+      questionText.textContent = `${currentQuestionIndex + 1}. ${q.question}`;
+
+      optionsContainer.innerHTML = "";
+
+      q.options.forEach((option, index) => {
+        const button = document.createElement("button");
+        button.className = "option";
+        if (userAnswers[currentQuestionIndex] === index) {
+          button.classList.add("selected");
+        }
+        button.textContent = `${String.fromCharCode(65 + index)}. ${option}`;
+        button.addEventListener("click", () => {
+          userAnswers[currentQuestionIndex] = index;
+          renderQuestion();
+        });
+        optionsContainer.appendChild(button);
+      });
+
+      prevBtn.disabled = currentQuestionIndex === 0;
+      prevBtn.style.opacity = currentQuestionIndex === 0 ? "0.5" : "1";
+      nextBtn.textContent = currentQuestionIndex === questions.length - 1 ? "Finish" : "Next";
+      updateProgress();
+    }
+
+    function calculateScore() {
+      score = 0;
+      questions.forEach((q, idx) => {
+        if (userAnswers[idx] === q.answer) score++;
+      });
+      return score;
+    }
+
+    function showResult() {
+      const total = questions.length;
+      const final = calculateScore();
+      const percentage = Math.round((final / total) * 100);
+
+      finalScore.textContent = percentage + "%";
+      const angle = (percentage / 100) * 360;
+      document.querySelector(".score-circle").style.background =
+        `conic-gradient(var(--secondary) 0deg ${angle}deg, #e5e7eb ${angle}deg 360deg)`;
+
+      if (percentage >= 80) {
+        resultMessage.textContent = "Excellent! You did a great job in Python Chapter 1–3.";
+      } else if (percentage >= 60) {
+        resultMessage.textContent = "Good job! Keep practicing and you will improve even more.";
+      } else if (percentage >= 40) {
+        resultMessage.textContent = "Nice effort! Review the chapters and try again.";
+      } else {
+        resultMessage.textContent = "Keep going! You can do better with more practice.";
+      }
+
+      showScreen(resultScreen);
+    }
+
+    function nextQuestion() {
+      if (currentQuestionIndex < questions.length - 1) {
+        currentQuestionIndex++;
+        renderQuestion();
+      } else {
+        showResult();
+      }
+    }
+
+    function prevQuestion() {
+      if (currentQuestionIndex > 0) {
+        currentQuestionIndex--;
+        renderQuestion();
+      }
+    }
+
+    startBtn.addEventListener("click", () => {
+      score = 0;
+      currentQuestionIndex = 0;
+      userAnswers = Array(questions.length).fill(null);
+      showScreen(quizScreen);
+      renderQuestion();
+    });
+
+    prevBtn.addEventListener("click", prevQuestion);
+    nextBtn.addEventListener("click", () => {
+      if (userAnswers[currentQuestionIndex] === null) {
+        alert("Please choose an answer before continuing.");
+        return;
+      }
+      nextQuestion();
+    });
+
+    restartBtn.addEventListener("click", () => {
+      currentQuestionIndex = 0;
+      score = 0;
+      userAnswers = Array(questions.length).fill(null);
+      showScreen(startScreen);
+    });
+  </script>
+</body>
+</html>
